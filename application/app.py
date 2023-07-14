@@ -3,6 +3,7 @@ import json
 import os
 import traceback
 import asyncio
+import openai
 
 import dotenv
 import requests
@@ -17,6 +18,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceHubEmbeddings, CohereEmbeddings, \
     HuggingFaceInstructEmbeddings
+from langchain.llms import AzureOpenAI    
 from langchain.prompts import PromptTemplate
 from langchain.prompts.chat import (
     ChatPromptTemplate,
@@ -26,6 +28,11 @@ from langchain.prompts.chat import (
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 
+openai.api_base = "https://testchatgpt-3.openai.azure.com/" 
+openai.api_type = 'azure'
+openai.api_version = "2022-12-01" 
+
+
 from error import bad_request
 from worker import ingest_worker
 
@@ -34,7 +41,8 @@ from worker import ingest_worker
 if os.getenv("LLM_NAME") is not None:
     llm_choice = os.getenv("LLM_NAME")
 else:
-    llm_choice = "openai_chat"
+    #llm_choice = "openai_chat"
+    llm_choice = "openai"
 
 if os.getenv("EMBEDDINGS_NAME") is not None:
     embeddings_choice = os.getenv("EMBEDDINGS_NAME")
@@ -160,7 +168,7 @@ def api_answer():
         # loading the index and the store and the prompt template
         # Note if you have used other embeddings than OpenAI, you need to change the embeddings
         if embeddings_choice == "openai_text-embedding-ada-002":
-            docsearch = FAISS.load_local(vectorstore, OpenAIEmbeddings(openai_api_key=embeddings_key))
+            docsearch = FAISS.load_local(vectorstore, OpenAIEmbeddings(document_model_name="text-embedding-ada-002", openai_api_key=embeddings_key))
         elif embeddings_choice == "huggingface_sentence-transformers/all-mpnet-base-v2":
             docsearch = FAISS.load_local(vectorstore, HuggingFaceHubEmbeddings())
         elif embeddings_choice == "huggingface_hkunlp/instructor-large":
@@ -195,7 +203,8 @@ def api_answer():
             ]
             p_chat_reduce = ChatPromptTemplate.from_messages(messages_reduce)
         elif llm_choice == "openai":
-            llm = OpenAI(openai_api_key=api_key, temperature=0)
+            #llm = OpenAI(openai_api_key=api_key, temperature=0)
+            llm = AzureOpenAI(openai_api_key=api_key, deployment_name="Testdavinvi003", model_name="text-davinci-003")
         elif llm_choice == "manifest":
             llm = ManifestWrapper(client=manifest, llm_kwargs={"temperature": 0.001, "max_tokens": 2048})
         elif llm_choice == "huggingface":

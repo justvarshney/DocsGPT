@@ -2,6 +2,7 @@ import os
 import faiss
 import pickle
 import tiktoken
+import openai
 from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 
@@ -11,7 +12,9 @@ from langchain.embeddings import OpenAIEmbeddings
 
 from retry import retry
 
-
+openai.api_base = "https://testchatgpt-3.openai.azure.com/" 
+openai.api_type = 'azure'
+openai.api_version = "2022-12-01" 
 
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
 # Function to convert string to tokens and estimate user cost.
@@ -37,7 +40,7 @@ def call_openai_api(docs, folder_name, task_status):
     docs.pop(0)
     c1 = 0
 
-    store = FAISS.from_documents(docs_test, OpenAIEmbeddings(openai_api_key=os.getenv("EMBEDDINGS_KEY")))
+    store = FAISS.from_documents(docs_test, OpenAIEmbeddings(document_model_name="text-embedding-ada-002", openai_api_key=os.getenv("EMBEDDINGS_KEY")))
 
     # Uncomment for MPNet embeddings
     # model_name = "sentence-transformers/all-mpnet-base-v2"

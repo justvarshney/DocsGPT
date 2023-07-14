@@ -3,7 +3,12 @@ import ast
 import tiktoken
 from pathlib import Path
 from langchain.llms import OpenAI
+from langchain.llms import AzureOpenAI
 from langchain.prompts import PromptTemplate
+
+openai.api_base = "https://testchatgpt-3.openai.azure.com/" 
+openai.api_type = 'azure'
+openai.api_version = "2022-12-01" 
 
 def find_files(directory):
     files_list = []
@@ -66,7 +71,8 @@ def parse_functions(functions_dict, formats, dir):
                 input_variables=["code"],
                 template="Code: \n{code}, \nDocumentation: ",
             )
-            llm = OpenAI(temperature=0)
+            #llm = OpenAI(temperature=0)
+            llm = AzureOpenAI(deployment_name="Testdavinvi003", model_name="text-davinci-003")
             response = llm(prompt.format(code=function))
             mode = "a" if Path(f"outputs/{source_w}").exists() else "w"
             with open(f"outputs/{source_w}", mode) as f:
@@ -86,7 +92,8 @@ def parse_classes(classes_dict, formats, dir):
                 input_variables=["class_name", "functions_names"],
                 template="Class name: {class_name} \nFunctions: {functions_names}, \nDocumentation: ",
             )
-            llm = OpenAI(temperature=0)
+            #llm = OpenAI(temperature=0)
+            llm = AzureOpenAI(deployment_name="Testdavinvi003", model_name="text-davinci-003")
             response = llm(prompt.format(class_name=name, functions_names=function_names))
 
             with open(f"outputs/{source_w}", "a" if Path(f"outputs/{source_w}").exists() else "w") as f:
